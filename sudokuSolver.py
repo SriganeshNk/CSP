@@ -3,6 +3,7 @@
 import sys, copy, pdb
 from time import time
 from sudokuUtil import *
+import backtrack
 
 # Please implement function solve_puzzle
 # input puzzle: 2D list, for example:
@@ -211,7 +212,7 @@ def solve_puzzle(puzzle, argv):
 		strPuzzle.append(temp)
 	print argv
 	if len(argv) > 1 and argv[1] == "backtracking":
-		dummyPuzzle, solved = simpleSearch(strPuzzle)
+		dummyPuzzle, solved = backtrack.solve()
 	else:
 		for i in range(2):
 			for row in range(len(strPuzzle)):

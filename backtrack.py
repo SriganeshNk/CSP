@@ -68,7 +68,12 @@ def solve():
 	# Puzzle_row is a list of vectors where each vector is a row
 	# Puzzle_col is a list of vectors where each vector is a col
 	# Pass both these values to the sudoku solver
-	solve_puzzle(puzzle_row, puzzle_col)
-	save_sudoku('solution.txt', puzzle_row)
+	t0 = time()
+	r = solve_puzzle(puzzle_row, puzzle_col)
+	t1 = time()
+	print "completed. time usage: %f" %(t1 - t0), "secs."	
+	if r == 0:
+		return (puzzle_row, False)
+	return (puzzle_row, True)
+	#save_sudoku('solution.txt', puzzle_row)
 
-solve()
