@@ -28,46 +28,32 @@ checkSolution = True
 simpleCheck = False
 
 def getUnit(row, col):
-	startR , startC, endR, endC = 0, 0, 0, 0
-	if (row+1)%3 == 0:
-		startR, endR = row-2, row
-	if (col+1)%3 == 0:
-		startC, endC = col-2, col
-	if (row+1)%3 == 1:
-		startR, endR = row, row+2
-	if (col+1)%3 == 1:
-		startC, endC = col, col+2
-	if (row+1)%3 == 2:
-		startR, endR = row-1, row+1
-	if (col+1)%3 == 2:
-		startC, endC = col-1, col+1
-	return startR, endR, startC, endC
+        startR = row - (row%3)
+        startC = col - (col%3)
+        return startR, startR+2, startC, startC+2
+
+def replace_l(lst, x ,y):
+	lst = lst.replace(x, y)
 
 #Forward Checking
+# Check for numbers in row, col and unit
 def suggestValue(tempPuzzle, row, col, elimTry):
 	possibleValues = '123456789'
-	#Row Check
-	#pdb.set_trace()
-	for x in possibleValues:
-		if tempPuzzle[row].count(x):
-			possibleValues = possibleValues.replace(x,'')
-	#col Check
-	colValues = []
-	for x in range(len(tempPuzzle[col])):
-		if tempPuzzle[x][col] != '0' and len(tempPuzzle[x][col]) == 1:
-			colValues.append(tempPuzzle[x][col])
-	for x in possibleValues:
-		if colValues.count(x):
-			possibleValues = possibleValues.replace(x,'')
-	#3*3 check
-	#calculating the box that this value belongs to.
+        
+	#Check for numbers in row
+	[replace_l(possibleValues, x, ' ') for x in possibleValues if x in tempPuzzle[row]]
+        
+	# check for numbers in col
+	[replace_l(possibleValues, tempPuzzle[x][col], ' ') for x in col_len if (tempPuzzle[x][col] != '0') and len(tempPuzzle[x][col]) == 1]
+
 	startR, endR ,startC, endC = getUnit(row, col)
-	for x in range(startR, endR+1):
-		for y in range(startC, endC+1):
-			if tempPuzzle[x][y] != '0' and len(tempPuzzle[x][y]) == 1:
-				possibleValues = possibleValues.replace(tempPuzzle[x][y],'')
+ 
+	# check for numbers in the unit
+	[replace_l(possibleValues, tempPuzzle[x][y], ' ') for x in range(startR, endR+1) 
+                       for y in range(startC, endC+1) if (tempPuzzle[x][y] != '0') and len(tempPuzzle[x][y]) == 1]
+
 	if len(possibleValues) == 1 or elimTry == 1:
-		tempPuzzle[row][col] = possibleValues
+                tempPuzzle[row][col] = possibleValues
 
 # see if the tried value confirms to the games rules
 def checkCorrectness(dummyPuzzle, row, col, strict=False):
@@ -158,6 +144,7 @@ def revert(dummyPuzzle, strPuzzle):
 		for col in range(len(strPuzzle[row])):
 			dummyPuzzle[row][col] = strPuzzle[row][col]
 
+"""
 def simpleSearch(strPuzzle):
 	"Using depth-first search and propagation, try all possible values."
 	#pdb.set_trace()
@@ -178,6 +165,7 @@ def simpleSearch(strPuzzle):
 		return (strPuzzle, True)
 	else:
 		return (strPuzzle, False)
+"""
 
 def search(dummyPuzzle, strPuzzle, row, col):
 	"Using depth-first search and propagation, try all possible values."
@@ -207,18 +195,18 @@ def solve_puzzle(puzzle, argv):
 	strPuzzle = []
 	dummyPuzzle = []
 	solved = False
-	for x in puzzle:
-		temp = map(str, x)
-		strPuzzle.append(temp)
-	print argv
+        strPuzzle = [map(str, x) for x in puzzle]
+
+	global row_len
+        row_len = range(len(strPuzzle))
+        global col_len
+        col_len = range(len(strPuzzle[0]))
+
 	if len(argv) > 1 and argv[1] == "backtracking":
 		dummyPuzzle, solved = backtrack.solve()
 	else:
-		for i in range(2):
-			for row in range(len(strPuzzle)):
-				for col in range(len(strPuzzle[row])):
-					if strPuzzle[row][col] == '0':
-						suggestValue(strPuzzle, row, col, i)
+        	[suggestValue(strPuzzle,row,col,i) for i in range(2)
+                	for row in row_len for col in col_len if strPuzzle[row][col] == '0']
 		startR, startC = nextEntry(strPuzzle, True)
 		dummyPuzzle = copy.deepcopy(strPuzzle)
 		dummyPuzzle , solved = search(dummyPuzzle, strPuzzle, startR, startC)
