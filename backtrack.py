@@ -2,6 +2,15 @@ import sys, copy, pdb
 from time import time
 from sudokuUtil import *
 
+
+def check_box(puzzle_row, puzzle_col, row, col, num):
+	#print "row =",row,"col =",col,"num =",num
+	a = [1 for x in range(3) for y in range(3) if puzzle_row[x+row][y+col] == num]
+	#print a
+	if 1 in a:
+		return 1
+	return 0
+
 def check_validity(puzzle_row, puzzle_col, row, col, num):
 	# Check num if present in that row
 	ret_row = (1 if num in puzzle_row[row] else 0)
@@ -9,50 +18,57 @@ def check_validity(puzzle_row, puzzle_col, row, col, num):
 	# check num if present in that col
 	ret_col = (1 if num in puzzle_col[col] else 0)
 
-	return ret_row | ret_col
+	ret_box = check_box(puzzle_row, puzzle_col, row-row%3, col-col%3, num)
+
+	return ret_row | ret_col | ret_box
+
+import pdb
 			
-
-
-def solve_puzzle(puzzle_row, puzzle_col, argv):
+def solve_puzzle(puzzle_row, puzzle_col):
 	# Find a spot with 0,0
 	spot = next(((i,j) for i,x in enumerate(puzzle_row) for j,y in enumerate(x) if y == 0), -1)
 	if spot == -1:
-		return true
+		return 1
 
 	(x,y) = spot # Has the x and y co-ordinate for 0 in the puzzle array
-	print "x,y",(x,y)
+	#print "x,y",(x,y)
+	#pdb.set_trace()
 
 	for i in range(1,10):
 		if not check_validity(puzzle_row, puzzle_col, x, y, i):
 			puzzle_row[x][y] = i
-			print "valid num =",i
+			puzzle_col[y][x] = i
+			if solve_puzzle(puzzle_row, puzzle_col):
+				return 1
+			puzzle_row[x][y] = 0
+			puzzle_col[y][x] = 0
+			#print "valid num =",i
 
-	return []
+	return 0
 
 def solve():
-	for i in range(2):
-		puzzle_row = load_sudoku('puzzle.txt')
-		puzzle_col = [[]]
+	puzzle_row = load_sudoku('puzzle.txt')
+	puzzle_col = [[]]
 
-		global row_len
-		row_len = range(len(puzzle_row))
-		global col_len
-		col_len = range(len(puzzle_row[0]))
+	global row_len
+	row_len = range(len(puzzle_row))
+	global col_len
+	col_len = range(len(puzzle_row[0]))
 
-		print puzzle_row
-		for x in row_len:
-			lst=[]
-			for i in col_len:
-				lst.append(puzzle_row[i][x])
-			puzzle_col.append(lst)
+#		print puzzle_row
+	for x in row_len:
+		lst=[]
+		for i in col_len:
+			lst.append(puzzle_row[i][x])
+		puzzle_col.append(lst)
 
-		del puzzle_col[0]
+	del puzzle_col[0]
 
-		# By this point we are having two list of vectors
-		# Puzzle_row is a list of vectors where each vector is a row
-		# Puzzle_col is a list of vectors where each vector is a col
-		# Pass both these values to the sudoku solver
-		solution = solve_puzzle(puzzle_row, puzzle_col,sys.argv)
-		save_sudoku('solution.txt', solution)
+	# By this point we are having two list of vectors
+	# Puzzle_row is a list of vectors where each vector is a row
+	# Puzzle_col is a list of vectors where each vector is a col
+	# Pass both these values to the sudoku solver
+	solve_puzzle(puzzle_row, puzzle_col)
+	save_sudoku('solution.txt', puzzle_row)
 
 solve()
